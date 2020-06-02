@@ -2,43 +2,30 @@
 
 namespace Tests\Feature;
 
-use Gallery\Images\Http\Requests\ImageStoreRequest;
 use Illuminate\Http\UploadedFile;
-use Tests\ApiAuthorization;
 use Tests\TestCase;
 
-/**
- * Тест к сожалению завязан на реквест
- * применяющийся в ImageStoreRequest
- */
 class StrictRequestTest extends TestCase
 {
-    use ApiAuthorization;
-
-    /**
-     * @var array
-     */
-    protected $rules;
-
     protected function setUp(): void
     {
         parent::setUp();
-        $validationRequest = new ImageStoreRequest();
-        $this->rules = $validationRequest->rules();
-        $this->auth();
     }
     /**
-     * Проверяет что в реквесте присутствуют только параметры,
-     * описанные в правилах валидации
+     * Проверяем что при получении данных неописанных в правилах валидации
+     * получаем 422 ошибку и соответствующее сообщение
      *
      * @test
      */
-    public function validation_should_failed_without_validated_data()
+    public function validation_should_failed_with_unavailable_arguments()
     {
-        $this->rules += [
-            'test' => 'test'
+        $data = [
+            'name'  => 'test',
+            'age'   => 12,
+            'unavailable_argument' => 'test',
+            'unavailable_argument_2' => 'test',
         ];
-        $response = $this->post(route('images.store'), $this->rules);
+        $response = $this->post(route('tests.strict-request'), $data);
         $response->assertStatus(422);
         $response->assertJson([
             'errors' => [
@@ -52,23 +39,12 @@ class StrictRequestTest extends TestCase
     /**
      * @test
      */
-    public function request_should_passed_with_all_attributes()
+    public function validation_should_passed_with_correct_request()
     {
-        $response = $this->post(route('images.store'), [
-            'name' => 'test',
-            'file' => UploadedFile::fake()->image('test.jpg')
-        ]);
-        $response->assertStatus(200);
-    }
-
-    /**
-     * @test
-     */
-    public function request_should_passed_with_only_required_attributes()
-    {
-        $response = $this->post(route('images.store'), [
-            'file' => UploadedFile::fake()->image('test.jpg')
-        ]);
-        $response->assertStatus(200);;
+        $data = [
+            'age'   => 12,
+        ];
+        $response = $this->post(route('tests.strict-request'), $data);
+        $response->assertStatus(204);
     }
 }

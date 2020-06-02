@@ -17,3 +17,13 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+/**
+ * Роуты для тестирования
+ */
+if (env('APP_ENV') === 'testing') {
+    Route::group(['prefix' => 'tests', 'as' => 'tests.'], function() {
+        Route::post('strict-request', 'TestingController@strictRequest')->name('strict-request');
+    });
+}
+

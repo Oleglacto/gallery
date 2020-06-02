@@ -27,21 +27,14 @@ class StrictFormRequest extends FormRequest
     protected function onlyExistsRulesInRequest(Validator $validator)
     {
         $validator->after(function (Validator $validator) {
-            $requiredKeys = array_keys(array_filter($this->rules(), function ($item) {
-                return Str::contains($item, 'required');
-            }));
-
             $rulesKeys = array_keys($this->rules());
             $requestDataKeys = array_keys($this->all());
 
-            foreach ($rulesKeys as $rulesKey) {
-                if (($key = array_search($rulesKey, $requestDataKeys)) !== false) {
-                    unset($requestDataKeys[$key]);
+            foreach ($requestDataKeys as $requestKey) {
+                if (array_search($requestKey, $rulesKeys) === false) {
+                    $validator->errors()->add('parameters', 'Unavailable parameters');
+                    return;
                 }
-            }
-
-            if (!empty($requestDataKeys)) {
-                $validator->errors()->add('parameters', 'Unavailable parameters');
             }
         });
     }
